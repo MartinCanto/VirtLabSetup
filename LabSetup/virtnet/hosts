@@ -1,0 +1,14 @@
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+192.168.100.101 nodea.storage
+192.168.200.101 nodea.private
+192.168.125.151 nodea.public
+192.168.100.102 nodeb.storage
+192.168.200.102 nodeb.private
+192.168.125.152 nodeb.public
+192.168.100.103 nodec.storage
+192.168.200.103 nodec.private
+192.168.125.153 nodec.public
+192.168.100.104 workstation.storage
+192.168.200.104 workstation.private
+192.168.125.150 workstation.public

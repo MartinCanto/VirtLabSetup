@@ -1,0 +1,6 @@
+
+[192.168.200.1]
+name=added from: http://192.168.200.1:8000/Packages/
+baseurl=http://192.168.200.1:8000/Packages/
+enabled=1
+
