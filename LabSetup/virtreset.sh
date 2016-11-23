@@ -55,22 +55,23 @@ virsh start workstation
 sleep 10
 echo "Installing SSH Keys"
 yum -q list installed sshpass &>/dev/null && echo "sshpass already installed skipping install" || sudo yum install sshpass -y --nogpgcheck;
+read -p -t 60 'Open a shell and create a ssh key by typing: ssh-keygen Then press ENTER to continue this script.'
 sleep 5
 for i in {nodea.private,nodeb.private,nodec.private,workstation.private} ; do sshpass -p redhat ssh-copy-id root@$i ; done
 sleep 1
 echo "Starting Fencing Setup"
-for i in {nodea.private,nodeb.private,nodec.private,workstation.private} ; do ssh root@$i mkdir /etc/cluster/ ; done
+for i in {nodea.private,nodeb.private,nodec.private,workstation.private} ; do ssh -q root@$i mkdir /etc/cluster/ ; done
 sleep 1
 for i in {nodea.private,nodeb.private,nodec.private,workstation.private} ; do scp /etc/cluster/fence_xvm.key root@$i:/etc/cluster/fence_xvm.key ; done
 sleep 1
 for i in {nodea.private,nodeb.private,nodec.private,workstation.private} ; do scp /etc/hosts root@$i:/etc/hosts ; done
 sleep 2
 echo "Setting Firewall"
-for i in {nodea.private,nodeb.private,nodec.private,workstation.private} ; do ssh root@$i 'firewall-cmd --zone=public --add-port=1229/tcp --permanent ; firewall-cmd --reload' ; done
+for i in {nodea.private,nodeb.private,nodec.private,workstation.private} ; do ssh -q root@$i 'firewall-cmd --zone=public --add-port=1229/tcp --permanent ; firewall-cmd --reload' ; done
 sleep 2
 echo "Setting up YUM Repo"
 for i in {nodea.private,nodeb.private,nodec.private,workstation.private} ; do scp http://192.168.200.1:8000/Repo/192.168.200.1.repo root@$i:/etc/yum.repos.d/192.168.200.1.repo ; done
-for i in {nodea.private,nodeb.private,nodec.private,workstation.private} ; do ssh root@$i 'yum repolist' ; done
+for i in {nodea.private,nodeb.private,nodec.private,workstation.private} ; do ssh -q root@$i 'yum repolist' ; done
 clear
 echo -e '\nCompleted setup, you should have a icon on your desktop now that you can use to reset the environment.\nPlease run this icon before attempting to work with virtual machines'
 echo -e '\nInstead of using the RedHat fencing agent, you will use fenc_virt, to test if nodes are connected type:\n"fence_xvm -o list"\n'
