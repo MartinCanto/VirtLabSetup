@@ -1,6 +1,16 @@
 #!/bin/bash
 # Lab on a Stick Setup
 # Joseph Martin Nov 2016
+rp= sudo virsh snapshot-list nodea | grep restore | awk '{print $1}'
+cd /LabSetup/
+
+if ps ax | grep -v grep | grep SimpleHTTPServer > /dev/null
+then
+	echo 'HTTP service running, script will continue.'
+else
+	echo -e 'HTTPS service not running\nRestarting HTTP for repos\n'
+	nohup python -m SimpleHTTPServer &>/dev/null &
+fi
 
 if [ ! -f /etc/yum.repos.d/127.0.0.1.repo ]
 then
@@ -27,29 +37,26 @@ then
 
 fi
 sleep 5
-if [ ! -f /LabSetup/images/workstation.img ]
+if [ ! -f /LabSetup/images/nodec.qcow2 ]
 then
+	echo 'Setting file permissions'
+	chown -R $SUDO_USER: /var/lib/libvirt/
+	chown -R $SUDO_USER: /LabSetup/
+	chmod g+s /LabSetup/images/
+	chown $SUDO_USER: /var/lib/libvirt
+	
+	echo 'Installing Virtual Networking'
 	virsh net-create /LabSetup/virtnet/public.xml 
 	virsh net-create /LabSetup/virtnet/private.xml 
 	virsh net-create /LabSetup/virtnet/storage.xml
 	virt-manager &
-	sleep 10 
-	virt-install --name nodea --initrd-inject=/LabSetup/ks/nodea/ks.cfg --extra-args="ks=file:/ks.cfg" --ram=768 --vcpus=1 --location=/LabSetup/ISO/CentOS7.iso --os-variant=rhel7 --disk /LabSetup/images/nodea.img,size=8 -w network=private -w network=public -w network=storage --os-type=linux 2> /dev/null &
-	sleep 10
-	virt-install --name nodeb --initrd-inject=/LabSetup/ks/nodeb/ks.cfg --extra-args="ks=file:/ks.cfg" --ram=768 --vcpus=1 --location=/LabSetup/ISO/CentOS7.iso --os-variant=rhel7 --disk /LabSetup/images/nodeb.img,size=8 -w network=private -w network=public -w network=storage --os-type=linux 2> /dev/null &
-	sleep 10
-	virt-install --name nodec --initrd-inject=/LabSetup/ks/nodec/ks.cfg --extra-args="ks=file:/ks.cfg" --ram=768 --vcpus=1 --location=/LabSetup/ISO/CentOS7.iso --os-variant=rhel7 --disk /LabSetup/images/nodec.img,size=8 -w network=private -w network=public -w network=storage --os-type=linux 2> /dev/null &
-	sleep 10
-	virt-install --name workstation --initrd-inject=/LabSetup/ks/workstation/ks.cfg --extra-args="ks=file:/ks.cfg" --ram=768 --vcpus=1 --location=/LabSetup/ISO/CentOS7.iso --os-variant=rhel7 --disk /LabSetup/images/workstation.img,size=8 -w network=private -w network=public -w network=storage --os-type=linux 2> /dev/null &
+	virt-install --name nodea --initrd-inject=/LabSetup/ks/nodea/ks.cfg --extra-args="ks=file:/ks.cfg" --ram=768 --vcpus=1 --location=/LabSetup/ISO/CentOS7.iso --os-variant=rhel7 --disk /LabSetup/images/nodea.qcow2,size=8 -w network=private -w network=public -w network=storage --os-type=linux 2> /dev/null &
+	virt-install --name nodeb --initrd-inject=/LabSetup/ks/nodeb/ks.cfg --extra-args="ks=file:/ks.cfg" --ram=768 --vcpus=1 --location=/LabSetup/ISO/CentOS7.iso --os-variant=rhel7 --disk /LabSetup/images/nodeb.qcow2,size=8 -w network=private -w network=public -w network=storage --os-type=linux 2> /dev/null &
+	virt-install --name nodec --initrd-inject=/LabSetup/ks/nodec/ks.cfg --extra-args="ks=file:/ks.cfg" --ram=768 --vcpus=1 --location=/LabSetup/ISO/CentOS7.iso --os-variant=rhel7 --disk /LabSetup/images/nodec.qcow2,size=8 -w network=private -w network=public -w network=storage --os-type=linux 2> /dev/null &
+	virt-install --name workstation --initrd-inject=/LabSetup/ks/workstation/ks.cfg --extra-args="ks=file:/ks.cfg" --ram=768 --vcpus=1 --location=/LabSetup/ISO/CentOS7.iso --os-variant=rhel7 --disk /LabSetup/images/workstation.qcow2,size=8 -w network=private -w network=public -w network=storage --os-type=linux 2> /dev/null &
 	clear
 	read -t 1200 -p "Please wait for all Machines to be finished, Then press ENTER to create default snapshots. If you do not wait then it may take longer to reload the lab. Once ready press ENTER to continue"
 	echo " ";
-	echo "Creating Snapshots"
-	virsh snapshot-create-as nodea restore
-	virsh snapshot-create-as nodeb restore
-	virsh snapshot-create-as nodec restore
-	virsh snapshot-create-as workstation restore
-	cp /LabSetup/virtnet/hosts /etc/hosts
 fi
 
 yum -q list installed fence-virtd &>/dev/null && echo "Fencing Agent already installed skipping install" || yum install fence-virt fence-virtd fence-virtd-libvirt fence-virtd-multicast -y --nogpgcheck ;
@@ -79,13 +86,6 @@ fi
 
 clear
 
-if [ -f /etc/yum.repos.d/127.0.0.1_8000_Packages.repo ]
-then
-	cp /etc/yum.repos.d.bak/yum.repos.d/* /etc/yum.repos.d/
-	rm /etc/yum.repos.d/127.0.0.1_8000_Packages.repo
-	yum repolist
-fi
-
 if [ ! -f /srv/iscsi/backingstore ]
 then
 	systemctl enable target
@@ -103,7 +103,51 @@ then
 	targetcli iscsi/iqn.2015-06.com.example:cluster/tpg1/luns/ create /backstores/fileio/clusterstor
 fi
 
+if [ ! -f /LabSetup/images/workstation.img ]
+then
+	bash /LabSetup/start.sh 
+fi
+
+if [ $rp>="restore" ] ; 
+then 
+	virsh snapshot-create-as restore --domain nodea
+	virsh snapshot-create-as restore --domain nodeb
+	virsh snapshot-create-as restore --domain nodec
+	virsh snapshot-create-as restore --domain workstation
+fi
+
+echo 'Resetting Nodes'
+virsh shutdown nodea
+virsh shutdown nodeb
+virsh shutdown nodec
+virsh shutdown workstation
+echo "Restoring Snapshots"
+virsh snapshot-revert nodea restore
+virsh snapshot-revert nodeb restore
+virsh snapshot-revert nodeb restore
+virsh snapshot-revert workstation restore
+echo "Starting Nodes"
+virsh start nodea
+virsh start nodeb
+virsh start nodec
+virsh start workstation
+sleep 15
+echo "Installing SSH Keys"
+yum -q list installed sshpass &>/dev/null && echo "sshpass already installed skipping install" || sudo yum install sshpass -y --nogpgcheck;
+sleep 5
+# for i in {nodea.private,nodeb.private,nodec.private,workstation.private} ; do sshpass -p "redhat" ssh-copy-id root@$i ; done
+echo "Starting Fencing Setup"
+for i in {nodea.private,nodeb.private,nodec.private,workstation.private} ; do sshpass -p "redhat" ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no root@$i mkdir /etc/cluster/ ; done
+for i in {nodea.private,nodeb.private,nodec.private,workstation.private} ; do sshpass -p "redhat" scp /etc/cluster/fence_xvm.key root@$i:/etc/cluster/fence_xvm.key ; done
+for i in {nodea.private,nodeb.private,nodec.private,workstation.private} ; do sshpass -p "redhat" scp /etc/hosts root@$i:/etc/hosts ; done
+echo "Setting Firewall"
+for i in {nodea.private,nodeb.private,nodec.private,workstation.private} ; do sshpass -p "redhat" ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no root@$i 'firewall-cmd --zone=public --add-port=1229/tcp --permanent ; firewall-cmd --reload' ; done
+echo "Setting up YUM Repo"
+for i in {nodea.private,nodeb.private,nodec.private,workstation.private} ; do sshpass -p "redhat" scp http://192.168.200.1:8000/Repo/192.168.200.1.repo root@$i:/etc/yum.repos.d/192.168.200.1.repo ; done
+for i in {nodea.private,nodeb.private,nodec.private,workstation.private} ; do sshpass -p "redhat" ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no root@$i 'yum repolist' ; done
 clear
+
 echo -e '\nCompleted setup, you should have a icon on your desktop now that you can use to reset the environment.\nPlease run this icon before attempting to work with virtual machines'
-echo -e 'Instead of using the RedHat fencing agent, you will use fenc_virt, to test if nodes are connected type:\n"fence_xvm -o list"\n'
-echo -e "\nWhen adding fencing agent use:\npcs stonith create Fencing fence_xvm ip_family=ipv4\nTest fencing by typing:\nfence_virt nodea'"
+echo -e '\nInstead of using the RedHat fencing agent, you will use fenc_virt, to test if nodes are connected type:\n"fence_xvm -o list"\n'
+echo -e "\nWhen adding fencing agent use:\n'pcs stonith create Fencing fence_xvm ip_family=ipv4\nTest fencing by typing:\nfence_virt nodea'"
+print -p 'press ENTER to continue'

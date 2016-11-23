@@ -1,6 +1,7 @@
 #!/bin/bash
 # Lab on a Stick Setup
 # Joseph Martin Nov 2016
+# github https://github.com/MartinCanto/VirtLabSetup.git
 # ln -s Packages/ /home/$USER/Documents/
 
 if [ ! -f /LabSetup/start.bs ]
