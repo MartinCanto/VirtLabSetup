@@ -1,7 +1,7 @@
 <network>
   <name>storage</name>
   <uuid>a745cdaf-d7b9-492c-a5e9-3d437ccb3745</uuid>
-  <bridge name='virbr3' stp='on' delay='0'/>
+  <bridge name='virbr12' stp='on' delay='0'/>
   <mac address='52:54:00:46:3d:da'/>
   <domain name='storage'/>
   <ip address='192.168.200.1' netmask='255.255.255.0'>
