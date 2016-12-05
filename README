@@ -1,0 +1,6 @@
+Open a terminal and run: sudo ./start.sh  to stage the lab. 
+After staging doubleclick the 'VirtLab Environment Reset V6' icon on your desktop.
+If there are any reported errors at the end of the script then retry. 
+
+If you just want to reset up the networks and start the vms run the 'VirtLab Network Reset V6' icon.
+

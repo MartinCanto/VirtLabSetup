@@ -1,5 +1,5 @@
 <network>
-  <name>public</name>
+  <name>PUBLIC</name>
   <uuid>22750ba2-2f79-4606-824a-b06ec1f579ff</uuid>
   <forward mode='nat'>
     <nat>
@@ -8,9 +8,9 @@
   </forward>
   <bridge name='virbr11' stp='on' delay='0'/>
   <mac address='52:54:00:cb:52:7e'/>
-  <ip address='192.168.125.1' netmask='255.255.255.0'>
+  <ip address='172.25.1.1' netmask='255.255.0.0'>
     <dhcp>
-      <range start='192.168.125.2' end='192.168.125.254'/>
+      <range start='172.25.2.1' end='172.25.2.254'/>
     </dhcp>
   </ip>
 </network>

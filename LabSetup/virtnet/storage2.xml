@@ -1,12 +1,12 @@
 <network>
-  <name>storage2</name>
+  <name>STORAGE2</name>
   <uuid>b21058f2-f842-453e-824a-b06ec1f579ff</uuid>
   <bridge name='virbr13' stp='on' delay='0'/>
   <mac address='52:54:00:42:3d:cd'/>
-  <domain name='storage'/>
-  <ip address='192.168.10.1' netmask='255.255.255.0'>
+  <domain name='STORAGE2'/>
+  <ip address='192.168.2.1' netmask='255.255.255.0'>
     <dhcp>
-      <range start='192.168.10.100' end='192.168.10.105'/>
+      <range start='192.168.2.2' end='192.168.2.254'/>
     </dhcp>
   </ip>
 </network>
