@@ -146,7 +146,7 @@ then
 	for i in $nodes 
 	do
 		virsh list | grep $i > /dev/null && echo 'node '$i' found' || virt-install --name $i --initrd-inject=/LabSetup/ks/$i/ks.cfg --extra-args="ks=file:/ks.cfg" --ram=$(($memsize/1024)) --vcpus=1 --location=/LabSetup/ISO/CentOS7.iso --os-variant=rhel7 --disk /LabSetup/images/$i.qcow2,size=15$virtnet --os-type=linux 2> /dev/null &
-	sleep 10
+	sleep 30
 	done
 	sleep 60
 fi
