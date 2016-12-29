@@ -1,6 +1,108 @@
-Open a terminal and run: sudo ./start.sh  to stage the lab. 
-After staging doubleclick the 'VirtLab Environment Reset V6' icon on your desktop.
-If there are any reported errors at the end of the script then retry. 
+#####
+Created by Joseph S Martin
+December 2016
 
-If you just want to reset up the networks and start the vms run the 'VirtLab Network Reset V6' icon.
+Run the start.sh script in the base folder, this will copy the contents to the /LabSetup folder on the local machine and create two desktop icons.
+After this has completed, ensure you have your networking files, packages, and kickstart files placed in the proper locations as outlined below, then run the "VirtLab Environment Reset" icon on the desktop. This will start the processes of creating your virtual lab environment. After the virtual machines are created and waiting for you to login, run the desktop icon again to finish the setup. Be sure to read all warnings.
 
+NOTE -The script will see how much memory is available on the local machine, then divide that memory by the number of VM's you are creating.
+
+
+The hosts file is created based off the VM names, IP address, and the virtnet files data. The hosts information should be dynamically created and you can verify by running the command: cat /etc/hosts
+
+The contents of the files are encapsulated between the -startcontent- and -endcontent- tags, everyting inside those tags are the text.
+
+
+Packages--
+Create a new folder and name it whatever you wish the repo name to be, then inside that newly created folder create a folder named Packages and place all the packages you need available to your lab environment in there. The setup script will automatically create the repos and add them to this machine along with the virtual machines.
+
+Networking--
+place the networking setup file in the virtnet folder. if you need more than one network created then just create a separate file with different settings. Remember not to duplicate IP ranges or interfaces. please see exmaple at end of readme.
+
+Virtual Machines---
+For each new VM create a folder under the /LabSetup/KS folder and name the folder the name you want the VM.
+Place the kickstart file inside that folder name it ks.cfg. Edit the file to match the networking settings required and packages you wish to have installed by default. please see exmaple at end of readme.
+
+####################################################################################
+Networking file example:
+the filename is Classroom
+
+
+-StartContent-
+<network>
+  <name>Classroom</name>
+  <uuid>b21058f2-f842-453e-b996-ee07eea8bfc6</uuid>
+  <bridge name='virbr10' stp='on' delay='0'/>
+  <mac address='52:54:00:44:79:85'/>
+  <domain name='classroom.com'/>
+  <ip address='172.25.1.1' netmask='255.255.255.0'>
+    <dhcp>
+      <range start='172.25.1.2' end='172.25.1.254'/>
+    </dhcp>
+  </ip>
+</network>
+-EndContent-
+
+####################################################################################
+KS file example:
+
+file is named LabSetup/KS/Server1/ks.cfg
+Be sure to watch your networking settings.
+contents below:
+
+-StartContent-
+
+#version=DEVEL
+# System authorization information
+auth --enableshadow --passalgo=sha512
+# Use CDROM installation media
+cdrom
+# Use graphical install
+graphical
+# Run the Setup Agent on first boot
+firstboot --enable
+# Keyboard layouts
+keyboard --vckeymap=us --xlayouts='us'
+# System language
+lang en_US.UTF-8
+poweroff
+
+# Network information
+network --bootproto=static --device=eth0 --gateway=172.25.1.1 --ip=172.25.1.11 --nameserver=172.25.1.1 --netmask=255.255.255.0 --onboot=on --noipv6 --activate
+network --hostname=server1
+
+# Root password
+rootpw --iscrypted $6$0pa307nNMSzWM6iN$4j9bxJI.myIxBFLDcAclbBXPCjvtupOM97BpHXSyBg/mi53HhuWoKc.Ntx2zMYH4LDxRnd.L7lGzydHCrMoPp0
+# System timezone
+timezone America/New_York --isUtc
+user --groups=wheel --name=student --password=$6$Y.cy5GE6157CCnGR$1sadK549f1xazsaTW9HMsCQATFTNUD7zEL9YMZni/NAG5WhzNdSaY/rzhZ4a/HxvdU/NnW0bbsECRMLSlN64F1 --iscrypted --gecos="student"
+# System bootloader configuration
+bootloader --append=" crashkernel=auto" --location=mbr --boot-drive=vda
+autopart --type=lvm
+# Partition clearing information
+clearpart --none --initlabel
+
+%packages
+@^graphical-server-environment
+@base
+@core
+@desktop-debugging
+@dial-up
+@fonts
+@gnome-desktop
+@guest-agents
+@guest-desktop-agents
+@input-methods
+@internet-browser
+@multimedia
+@print-client
+@x11
+kexec-tools
+
+%end
+
+%addon com_redhat_kdump --enable --reserve-mb='auto'
+
+%end
+
+-EndContent-
