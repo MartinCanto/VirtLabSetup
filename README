@@ -2,6 +2,13 @@
 Created by Joseph S Martin
 December 2016
 
+
+Purpose: This set of scripts will dynamically create virtual machines along with networks and repos then setup connections dynamically between them. It works in either offline or online mode and is an all in one solution. 
+copy all files to a CD or USB device then run the start.sh ( sudo bash ./start.sh ) from that device.
+
+Ussage: To create virtual machines dynamically for testing purposes and have easy ability to reset those machines.
+
+
 Run the start.sh script in the base folder, this will copy the contents to the /LabSetup folder on the local machine and create two desktop icons.
 After this has completed, ensure you have your networking files, packages, and kickstart files placed in the proper locations as outlined below, then run the "VirtLab Environment Reset" icon on the desktop. This will start the processes of creating your virtual lab environment. After the virtual machines are created and waiting for you to login, run the desktop icon again to finish the setup. Be sure to read all warnings.
 
