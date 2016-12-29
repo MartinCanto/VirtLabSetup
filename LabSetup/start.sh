@@ -132,8 +132,8 @@ echo -------------------------------------------------------
 echo 'Generating hosts file dynamically'
 if [ ! -f /LabSetup/hosts ]
 then
-	for vnodes in $(ls -C /LabSetup/ks) ; do for vips in $( cat /LabSetup/ks/$vnodes/ks.cfg | grep '\-\-ip=' | awk '{print $5}') ; do echo $(for nets in ${vips//--ip=} ; do echo ${vips//--ip=} $vnodes"."$(for net in $(ls -C /LabSetup/virtnet) ; do grep $(echo $nets | cut -d "." -f1-3) /LabSetup/virtnet/$net > /dev/null && echo ${net//.xml} ; done) ; done) ; done ; done > /LabSetup/hosts
-	cat /LabSetup/Hosts >> /etc/hosts
+	for vnodes in $(ls -C /LabSetup/ks) ; do for vips in $( cat /LabSetup/ks/$vnodes/ks.cfg | grep '\-\-ip=' | awk '{print $5}') ; do echo $(for nets in ${vips//--ip=} ; do echo ${vips//--ip=} $vnodes"."$(for net in $(ls -C /LabSetup/virtnet) ; do grep $(echo $nets | cut -d "." -f1-3) /LabSetup/virtnet/$net > /dev/null && echo ${net//.xml}' '$vnodes ; done) ; done) ; done ; done > /LabSetup/hosts
+	cat /LabSetup/hosts >> /etc/hosts
 fi
 
 echo -------------------------------------------------------
@@ -173,51 +173,51 @@ echo 'Starting Virt-Manager'
 virt-manager &
 echo -------------------------------------------------------
 echo 'Checking for snapshot status'
-while [[ $snapshot -eq 0 ]]
-do
+if [[ $snapshot -eq 0 ]]
+then
 	for i in $nodes
 	do
+		if [[ $snapshot -eq 0 ]]
+		then
 		virsh snapshot-list $i | grep restore >/dev/null && snapshot=0 || snapshot=1
+		fi
 	done
-done
+fi
 echo -------------------------------------------------------
-echo -------------------------------------------------------
-echo "YUM Repo setup"
 if [[ $snapshot -eq 1 ]]
-	then
-		for i in $nodes
-	 	do 
-			for repos in $virtrepos ; 
-			do 
-				sshpass -p "redhat" ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no root@$i.public "mkdir -p /etc/yum.repos.d.bak/;cp -r /etc/yum.repos.d/ /etc/yum.repos.d.bak/;rm /etc/yum.repos.d/*;echo -e '[$virtrepos]\nname=LabSetupRepo\nbaseurl=http://192.168.0.1:8000/Packages\'$virtrepos'\nenabled=1\ngpgcheck=0'>/etc/yum.repos.d/LabSetup.repo"
-			sleep 3   
-			if [[ $? -ne 0 ]]
-			then
-				erm=$erm"\nError YUM Repo setup $i"
-				verification=1
-			fi
-		done
-		echo "Generating Hosts File"
-		for i in $nodes
-		do
-			
-			cat '/LabSetup/hosts' | sshpass -p "redhat" ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no root@$i.public "cat >> /etc/hosts"
-			
-
-			echo -------------------------------------------------------
-		done
-		for i in $nodes
+then
+	echo -------------------------------------------------------
+	echo "YUM Repo setup"
+	for i in $nodes
+ 	do 
+		for repos in $virtrepos ; 
 		do 
-			echo -------------------------------------------------------		
-			echo 'Updating yum repolist'
-			sshpass -p "redhat" ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no root@$i.public 'yum repolist'
-			if [[ $? -ne 0 ]]
-			then
-				erm=$erm"\nError updating yum $i"
-				verification=1
-			fi
+			sshpass -p "redhat" ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no root@$i "mkdir -p /etc/yum.repos.d.bak/ ; cp -r /etc/yum.repos.d/ /etc/yum.repos.d.bak/ ; rm /etc/yum.repos.d/* ; echo -e '[$virtrepos]\nname=LabSetupRepo\nbaseurl=http://192.168.0.1:8000/Packages\'$virtrepos'\nenabled=1\ngpgcheck=0'>/etc/yum.repos.d/LabSetup.repo"
+		sleep 3
+		if [[ $? -ne 0 ]]
+		then
+			erm=$erm"\nError YUM Repo setup $i"
+			verification=1
+		fi
 		done
-		echo -------------------------------------------------------	
+	done
+	echo -------------------------------------------------------
+	echo "Generating Hosts File"
+	for i in $nodes
+	do
+		cat '/LabSetup/hosts' | sshpass -p "redhat" ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no root@$i "cat >> /etc/hosts"
+	done
+	for i in $nodes
+	do 
+		echo -------------------------------------------------------		
+		echo 'Updating yum repolist'
+		sshpass -p "redhat" ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no root@$i 'yum repolist'
+		if [[ $? -ne 0 ]]
+		then
+			erm=$erm"\nError updating yum $i"
+			verification=1
+		fi
+	done
 fi
 
 if [[ $httpstatus -eq 1 ]]
@@ -257,10 +257,11 @@ if [[ $verification -eq 0 ]]
 then
 	echo ******************************************************
 	echo -e 'Setup is now completed!'	
-	echo -e '\nInstead of using the RedHat fencing agent, you will use fenc_virt, to test if nodes are connected type:\n"fence_xvm -o list"\n'
-	echo -e "\nWhen adding fencing agent use:\n'pcs stonith create Fencing fence_xvm ip_family=ipv4'\nTest fencing by typing:\n'fence_xvm -H nodea'"
+
 	read -p 'press ENTER to continue'
-else
+fi
+if [[ $verification -eq 1 ]]	
+then
 	echo -e 'Error\nError\nError'
 	echo -e '\n'$erm'\n'
 	read -p 'Error in script, please close and restart machine then try running again.'
