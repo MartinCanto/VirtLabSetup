@@ -49,4 +49,3 @@ do
 	sshpass -p "redhat" ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no root@$i.public 'yum repolist ; reboot'
 	sleep 3 	
 done
-systemctl restart fence_virtd
