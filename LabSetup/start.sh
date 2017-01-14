@@ -192,7 +192,7 @@ then
  	do 
 		for repos in $virtrepos ; 
 		do 
-			sshpass -p "redhat" ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no root@$i "mkdir -p /etc/yum.repos.d.bak/ ; cp -r /etc/yum.repos.d/ /etc/yum.repos.d.bak/ ; rm /etc/yum.repos.d/* ; echo -e '[$virtrepos]\nname=LabSetupRepo\nbaseurl=http://192.168.0.1:8000/Packages\'$virtrepos'\nenabled=1\ngpgcheck=0'>/etc/yum.repos.d/LabSetup.repo"
+			sshpass -p "redhat" ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no root@$i "mkdir -p /etc/yum.repos.d.bak/ ; cp -r /etc/yum.repos.d/ /etc/yum.repos.d.bak/ ; rm /etc/yum.repos.d/* ; echo -e '[$virtrepos]\nname=LabSetupRepo\nbaseurl=http://192.168.0.1:8000/Packages\'$virtrepos'\nenabled=1\ngpgcheck=0'>/etc/yum.repos.d/\'$virtrepos'.repo"
 		sleep 3
 		if [[ $? -ne 0 ]]
 		then
