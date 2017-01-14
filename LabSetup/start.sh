@@ -68,7 +68,7 @@ then
 				cp -R /etc/yum.repos.d/* /etc/yum.repos.d.bak/
 				rm -R /etc/yum.repos.d/*
 			fi
-		for i in $virtrepos ; do createrepo /LabSetup/Packages/$i/Packages ; echo -e '['$i']\nname='$i'\nbaseurl=http://127.0.0.1:8000/Packages/'$i'/Packages\nenabled=1\ngpgcheck=0'>/etc/yum.repos.d/$i.repo ; done
+		for i in $virtrepos ; do createrepo /LabSetup/Packages/$i/Packages ; echo -e '['$i']\nname='$i'\nbaseurl=http://classroom.example.com:8000/Packages/'$i'/Packages\nenabled=1\ngpgcheck=0'>/etc/yum.repos.d/$i.repo ; done
 		fi	
 	done
 elif [[ $onlinemode -eq 1 ]] && [[ $httpstatus -eq 0 ]]
@@ -84,7 +84,7 @@ then
 				cp -R /etc/yum.repos.d/* /etc/yum.repos.d.bak/
 				rm -R /etc/yum.repos.d/*
 			fi
-			for i in $virtrepos ; do createrepo /LabSetup/Packages/$i/Packages ;  echo -e '['$i']\nname='$i'\nbaseurl=http://127.0.0.1:8000/Packages/'$i'/Packages\nenabled=1\ngpgcheck=0'>/etc/yum.repos.d/$i.repo ; done
+			for i in $virtrepos ; do createrepo /LabSetup/Packages/$i/Packages ;  echo -e '['$i']\nname='$i'\nbaseurl=http://classroom.example.com:8000/Packages/'$i'/Packages\nenabled=1\ngpgcheck=0'>/etc/yum.repos.d/$i.repo ; done
 		fi	
 	done
 fi
@@ -133,6 +133,8 @@ echo 'Generating hosts file dynamically'
 if [ ! -f /LabSetup/hosts ]
 then
 	for vnodes in $(ls -C /LabSetup/ks) ; do for vips in $( cat /LabSetup/ks/$vnodes/ks.cfg | grep '\-\-ip=' | awk '{print $5}') ; do echo $(for nets in ${vips//--ip=} ; do echo ${vips//--ip=} $vnodes"."$(for net in $(ls -C /LabSetup/virtnet) ; do grep $(echo $nets | cut -d "." -f1-3) /LabSetup/virtnet/$net > /dev/null && echo ${net//.xml}' '$vnodes ; done) ; done) ; done ; done > /LabSetup/hosts
+	hostname classroom.example.com
+	echo 10.10.101.1 classroom.example.com >>/LabSetup/hosts	
 	cat /LabSetup/hosts >> /etc/hosts
 fi
 
@@ -192,7 +194,10 @@ then
  	do 
 		for repos in $virtrepos ; 
 		do 
-			sshpass -p "redhat" ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no root@$i "mkdir -p /etc/yum.repos.d.bak/ ; cp -r /etc/yum.repos.d/ /etc/yum.repos.d.bak/ ; rm /etc/yum.repos.d/* ; echo -e '[$virtrepos]\nname=LabSetupRepo\nbaseurl=http://192.168.0.1:8000/Packages/'$virtrepos'\nenabled=1\ngpgcheck=0'>/etc/yum.repos.d/\'$virtrepos'.repo"
+			sshpass -p "redhat" ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no root@$i "mkdir -p /etc/yum.repos.d.bak/ ; cp -r /etc/yum.repos.d/ /etc/yum.repos.d.bak/ ; rm /etc/yum.repos.d/*"
+			sshpass -p redhat scp -oStrictHostKeyChecking=no /etc/yum.repos.d/* root@$i.public:/etc/yum.repos.d/
+
+/etc/yum.repos.d/
 		sleep 3
 		if [[ $? -ne 0 ]]
 		then

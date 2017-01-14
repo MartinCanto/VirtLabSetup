@@ -13,7 +13,7 @@ do
 	sleep 3
 done
 
-echo 'Creating networks if needed'
+echo 'Checking Networks'
 for i in ${virtnets//.xml}
 do
 	virsh net-list | grep $i > /dev/null && virsh net-destroy $i || echo 'Network '$i' not found'
