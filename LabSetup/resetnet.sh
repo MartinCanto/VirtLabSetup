@@ -35,17 +35,3 @@ then
 	nohup python -m SimpleHTTPServer &>/dev/null &
 	sleep 3 
 fi
-
-echo "YUM Repo setup"
-for i in $nodes
-do 
-	sshpass -p "redhat" ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no root@$i.public "rm /etc/yum.repos.d/*;echo -e '[LabSetup]\nname=LabSetupRepo\nbaseurl=http://classroom.example.com:8000/Packages\nenabled=1\ngpgcheck=0'>/etc/yum.repos.d/LabSetup.repo"
-	sleep 3  
-done
-
-for i in $nodes 
-do 
-	echo 'Updating yum repolist'
-	sshpass -p "redhat" ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no root@$i.public 'yum repolist ; reboot'
-	sleep 3 	
-done
